@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  ds-app:
+    build: .
+    container_name: ds-app
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    environment:
+      - DISPLAY=$DISPLAY
+    network_mode: host
+    volumes:
+      - ./models:/models
+      - ./configs:/configs
+      - ./app:/app
+      - ./output:/output
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    command: ["python3", "/app/main.py", "--video", "/app/sample.mp4"]
