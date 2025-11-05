@@ -11,6 +11,9 @@ services:
             - capabilities: [gpu]
     environment:
       - DISPLAY=$DISPLAY
+      - NVDSINFER_LOG_LEVEL=3            # Bật log DeepStream (TensorRT + nvinfer)
+      - GST_DEBUG=nvinfer:4,nvstreammux:3,nvdsosd:3 # Bật log chi tiết GStreamer
+      - GST_DEBUG_DUMP_DOT_DIR=/output   # Xuất sơ đồ pipeline .dot
     network_mode: host
     volumes:
       - ./models:/models
@@ -19,3 +22,4 @@ services:
       - ./output:/output
       - /tmp/.X11-unix:/tmp/.X11-unix
     command: ["python3", "/app/main.py", "--video", "/app/sample.mp4"]
+
