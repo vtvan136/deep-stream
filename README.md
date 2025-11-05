@@ -16,7 +16,6 @@
 
 ` cd ultralytics && wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt `
 
-docker run -it --gpus all --runtime=nvidia -v /root/models:/models nvcr.io/nvidia/deepstream:7.0-triton-multiarch
 - Convert pt to onnx
 
 ` docker pull ultralytics/ultralytics:latest `
