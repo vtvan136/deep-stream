@@ -1,20 +1,53 @@
-version: "3.8"
 services:
+  # ========== ZOOKEEPER ==========
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks: [infer-net]
+
+  # ========== KAFKA ==========
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"  # expose cho host và container khác
+
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.17.0.1:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    networks: [infer-net]
+
+  # ========== DEEPSTREAM APP ==========
   ds-app:
     build: .
     container_name: ds-app
-    runtime: nvidia
+    depends_on:
+      - kafka
     deploy:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     environment:
-      - DISPLAY=$DISPLAY
-      - NVDSINFER_LOG_LEVEL=3            # Bật log DeepStream (TensorRT + nvinfer)
-      - GST_DEBUG=nvinfer:4,nvstreammux:3,nvdsosd:3 # Bật log chi tiết GStreamer
-      - GST_DEBUG_DUMP_DOT_DIR=/output   # Xuất sơ đồ pipeline .dot
-    network_mode: host
+      - DISPLAY=${DISPLAY}
+      - KAFKA_BROKER=172.17.0.1:9092   # 👈 IP host thật (docker0)
+      - KAFKA_TOPIC=infer
+      - NVDSINFER_LOG_LEVEL=3
+      - GST_DEBUG=nvinfer:4,nvstreammux:3,nvdsosd:3
+      - GST_DEBUG_DUMP_DOT_DIR=/output
+    network_mode: host                 # 👈 giữ host để RTSP/X11 hoạt động
     volumes:
       - ./models:/models
       - ./configs:/configs
@@ -23,3 +56,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
     command: ["python3", "/app/main.py", "--video", "/app/sample.mp4"]
 
+# ========== NETWORK ==========
+networks:
+  infer-net:
+    driver: bridge
