@@ -3,7 +3,7 @@ import json
 import time
 
 KAFKA_BROKER = "localhost:9092"   # hoặc 172.17.0.1:9092 nếu bạn chạy trong bridge khác
-KAFKA_TOPIC = "infer"
+KAFKA_TOPIC = "sample"
 
 def main():
     print(f"🔗 Connecting to Kafka broker at {KAFKA_BROKER}...")
