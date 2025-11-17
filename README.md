@@ -1,41 +1,123 @@
-# ds-app
+# 🚀 DeepStream Application Setup Guide
 
-- Ultralytics
+## 🛠️ Setup
 
-` git clone https://github.com/ultralytics/ultralytics `
+### 1. Clone Ultralytics Repository
 
-- Deepstream Yolo
+```bash
+git clone https://github.com/ultralytics/ultralytics
+```
 
-` git clone https://github.com/marcoslucianops/DeepStream-Yolo `
+### 2. Clone DeepStream-Yolo Repository
 
-- Copy file:
+```bash
+git clone https://github.com/marcoslucianops/DeepStream-Yolo
+```
 
-` cp DeepStream-Yolo/utils/export_yoloV8.py ultralytics/ `
+### 3. Copy YOLOv8 Export Script
 
-- Download model
+```bash
+cp DeepStream-Yolo/utils/export_yoloV8.py ultralytics/
+```
 
-` cd ultralytics && wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt `
+### 4. Download YOLOv8s Model
 
-- Convert pt to onnx
+```bash
+cd ultralytics
+wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt
+```
 
-` docker pull ultralytics/ultralytics:latest `
+### 5. Convert `.pt` to `.onnx`
 
-` docker run --rm -it -v ./:/ws -w /ws ultralytics/ultralytics:latest ` 
+Pull the required Docker image:
 
-` pip3 install onnx `
+```bash
+docker pull ultralytics/ultralytics:latest
+```
 
-` pip uninstall -y torch torchvision torchaudio `
+Run the Docker container for conversion:
 
-`    `
+```bash
+docker run --rm -it -v ./:/ws -w /ws ultralytics/ultralytics:latest
+```
 
-` python3 export_yolov8_deepstream.py -w yolov8s.pt -s 640 --opset 17 `
+Inside the container, install ONNX and manage PyTorch dependencies:
 
-- Convert onnx to engine
+```bash
+pip3 install onnx
+pip uninstall -y torch torchvision torchaudio
+```
 
-` docker run -it --gpus all --runtime=nvidia \
-  -v /home/admin2/deep-stream:/deep-stream \
-  nvcr.io/nvidia/deepstream:8.0-triton-multiarch `
-  
-` /usr/src/tensorrt/bin/trtexec --onnx=yolo11s.pt.onnx --fp16 --saveEngine=yolo11s.engine `
+Run the export script:
 
+```bash
+python3 export_yolov8_deepstream.py -w yolov8s.pt -s 640 --opset 17
+```
 
+### 6. Convert `.onnx` to TensorRT `.engine`
+
+Run the DeepStream Docker container (adjust the path `/home/admin2/deep-stream` as needed):
+
+```bash
+docker run -it --gpus all --runtime=nvidia \
+-v /home/admin2/deep-stream:/deep-stream \
+nvcr.io/nvidia/deepstream:8.0-triton-multiarch
+```
+
+Inside the container, build the TensorRT engine:
+
+```bash
+/usr/src/tensorrt/bin/trtexec --onnx=yolov8s.onnx --fp16 --saveEngine=yolov8s.engine
+```
+
+### 7. Convert Dinov2 Multi-task Classification Model
+
+* Convert `.pth` model to `.onnx` using:
+
+```bash
+utils/export_onnx.py
+```
+
+* Convert `.onnx` model to `.engine`.
+
+* Build the shared object file `.so`:
+
+```bash
+nvdsinfe_custom_par_dinov2/nvdsinfer_customparser.cpp
+```
+
+## ▶️ Run the Application
+
+### Start Zookeeper Service
+
+```bash
+docker compose up --build zookeeper -d
+```
+
+### Start Kafka Service
+
+```bash
+docker compose up --build kafka -d
+```
+
+### Start DeepStream Application Service
+
+```bash
+docker compose up --build ds-app -d
+```
+
+## 💡 Tools / Helper Scripts
+
+* **Send Video Request:**
+  Run the `request.py` file to send video processing requests:
+
+```bash
+python3 request.py
+```
+
+* **View Kafka Messages:**
+  Run the `app/consumer.py` file to view Kafka messages:
+
+```bash
+python3 app/consumer.py
+```
