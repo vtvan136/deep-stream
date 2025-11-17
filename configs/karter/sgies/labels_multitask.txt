@@ -1,0 +1,2 @@
+adult;child
+not_use_phone;use_phone

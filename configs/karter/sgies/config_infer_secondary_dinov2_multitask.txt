@@ -1,0 +1,19 @@
+[property]
+gpu-id=0
+process-mode=2
+network-type=1
+gie-unique-id=2
+operate-on-gie-id=1
+is-classifier=1
+model-engine-file=/ds-app/models/karter/sgies/dinov2_multitask.engine
+labelfile-path=labels_multitask.txt
+batch-size=1
+network-mode=2
+classifier-threshold=0.0
+custom-lib-path=/ds-app/nvdsinfe_custom/karter/nvdsinfe_custom_par_dinov2/libnvdsinfer_multitask.so
+parse-classifier-func-name=NvDsInferParseMultiTask
+# nếu cần specify output blobs:
+output-blob-names=age_logits;phone_logits
+
+[class-attrs-all]
+pre-cluster-threshold=0.0
